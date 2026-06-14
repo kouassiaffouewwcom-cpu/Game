@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GTA Bouaké Edition</title>
+    <style>
+        body { margin:0; overflow:hidden; background:#2d5016; font-family:Arial }
+        canvas { display:block }
+        #hud {
+            position:absolute; top:10px; left:10px; color:white; 
+            background:rgba(0,0,0,0.7); padding:10px; border-radius:5px
+        }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <b>GTA 2D</b><br>
+        ZQSD : Rouler | Espace : Frein<br>
+        Vitesse: <span id="speed">0</span> km/h
+    </div>
+    <canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const car = {
+    x: canvas.width/2, y: canvas.height/2,
+    angle: 0, speed: 0, maxSpeed: 8,
+    acc: 0.2, friction: 0.05, 
+    width: 30, height: 50
+};
+
+const keys = {};
+document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// Map simple avec bâtiments
+const buildings = [];
+for(let i = 0; i < 15; i++){
+    buildings.push({
+        x: Math.random() * 3000 - 1500,
+        y: Math.random() * 3000 - 1500,
+        w: 100 + Math.random()*100,
+        h: 100 + Math.random()*100
+    });
+}
+
+// Routes
+function drawRoad(x, y){
+    ctx.fillStyle = '#444';
+    ctx.fillRect(x, y, 3000, 3000);
+    ctx.strokeStyle = '#ffff00';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([40, 40]);
+    ctx.beginPath();
+    for(let i = -1500; i < 1500; i += 200){
+        ctx.moveTo(x + i, y + 1500);
+        ctx.lineTo(x + i + 100, y + 1500);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function update() {
+    // Contrôles
+    if(keys['z']) car.speed += car.acc;
+    if(keys['s']) car.speed -= car.acc;
+    if(keys[' ']) car.speed *= 0.9;
+    
+    if(keys['q'] && Math.abs(car.speed) > 0.5) car.angle -= 0.03 * car.speed/2;
+    if(keys['d'] && Math.abs(car.speed) > 0.5) car.angle += 0.03 * car.speed/2;
+    
+    // Physique
+    car.speed *= 1 - car.friction;
+    car.speed = Math.max(-car.maxSpeed/2, Math.min(car.maxSpeed, car.speed));
+    
+    car.x += Math.sin(car.angle) * car.speed;
+    car.y -= Math.cos(car.angle) * car.speed;
+    
+    document.getElementById('speed').textContent = Math.abs(Math.floor(car.speed * 10));
+}
+
+function draw() {
+    // Caméra suit la voiture
+    ctx.save();
+    ctx.translate(canvas.width/2 - car.x, canvas.height/2 - car.y);
+    
+    // Herbe + routes
+    ctx.fillStyle = '#2d5016';
+    ctx.fillRect(car.x - 2000, car.y - 2000, 4000, 4000);
+    drawRoad(car.x - 1500, car.y - 1500);
+    
+    // Bâtiments
+    ctx.fillStyle = '#555';
+    buildings.forEach(b => {
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.strokeStyle = '#333';
+        ctx.strokeRect(b.x, b.y, b.w, b.h);
+    });
+    
+    // Voiture
+    ctx.save();
+    ctx.translate(car.x, car.y);
+    ctx.rotate(car.angle);
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(-car.width/2, -car.height/2, car.width, car.height);
+    ctx.fillStyle = '#87ceeb';
+    ctx.fillRect(-car.width/2+3, -car.height/2+5, car.width-6, 15);
+    ctx.restore();
+    
+    ctx.restore();
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+loop();
+
+window.onresize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+</script>
+</body>
+</html>
