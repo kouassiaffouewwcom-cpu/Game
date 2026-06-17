@@ -1,0 +1,35 @@
+import math
+
+def calc():
+    print("=== Calculatrice Scientifique ===")
+    print("Opérations: + - * / ^")
+    print("Fonctions: sin, cos, tan, log, ln, sqrt, exp, pi, e")
+    print("Tape 'quit' pour sortir\n")
+
+    while True:
+        expr = input(">>> ").lower().strip()
+        
+        if expr == 'quit':
+            print("À plus !")
+            break
+
+        try:
+            # Remplacer ^ par ** pour les puissances
+            expr = expr.replace('^', '**')
+            
+            # Dictionnaire des fonctions autorisées
+            safe_dict = {
+                'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
+                'asin': math.asin, 'acos': math.acos, 'atan': math.atan,
+                'log': math.log10, 'ln': math.log, 'sqrt': math.sqrt,
+                'exp': math.exp, 'pi': math.pi, 'e': math.e,
+                'abs': abs, 'pow': pow, 'rad': math.radians, 'deg': math.degrees
+            }
+            
+            result = eval(expr, {"__builtins__": {}}, safe_dict)
+            print(f"= {result}\n")
+            
+        except Exception as e:
+            print(f"Erreur: vérifie ta syntaxe\n")
+
+calc()
